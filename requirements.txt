@@ -1,5 +1,5 @@
 streamlit==1.63.0
-ultralytics
+ultralytics-opencv-headless
 pillow-avif-plugin
 pillow-heif
 numpy
