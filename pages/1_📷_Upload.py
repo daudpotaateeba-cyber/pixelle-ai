@@ -13,7 +13,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# Load YOLO
+# Load the stronger YOLO model
 model = YOLO("yolo11s.pt")
 
 
@@ -74,14 +74,12 @@ st.markdown("""
         margin-top: 1.5rem;
     }
 
-    /* -------------------------
-       PIXELLE BUTTON
-       ------------------------- */
-
+    /* Button container */
     .stButton {
         text-align: center;
     }
 
+    /* Pixelle button */
     .stButton > button {
         background-color: #8b6bb3 !important;
         color: #ffffff !important;
@@ -90,11 +88,12 @@ st.markdown("""
         padding: 0.75rem 2.2rem !important;
         font-size: 1rem !important;
         font-weight: 650 !important;
-        box-shadow: 0 6px 20px rgba(120, 90, 160, 0.20) !important;
+        box-shadow: 0 6px 20px
+            rgba(120, 90, 160, 0.20) !important;
         transition: 0.2s ease !important;
     }
 
-    /* Force button text to white */
+    /* Force button text white */
     .stButton > button *,
     .stButton > button p,
     .stButton > button span,
@@ -107,7 +106,8 @@ st.markdown("""
         background-color: #76559e !important;
         color: #ffffff !important;
         transform: translateY(-2px);
-        box-shadow: 0 9px 25px rgba(120, 90, 160, 0.25) !important;
+        box-shadow: 0 9px 25px
+            rgba(120, 90, 160, 0.25) !important;
     }
 
     .stButton > button:hover *,
@@ -122,6 +122,17 @@ st.markdown("""
         border-radius: 18px;
         overflow: hidden;
         margin-top: 1rem;
+    }
+
+    /* Error box */
+    [data-testid="stAlert"] {
+        background: #f3ebff !important;
+        border: 1px solid #d9c8ec !important;
+        border-radius: 18px !important;
+    }
+
+    [data-testid="stAlert"] p {
+        color: #76559e !important;
     }
 
     /* Footer */
@@ -183,6 +194,8 @@ if uploaded_file:
     try:
 
         image = Image.open(uploaded_file)
+
+        # Make image compatible with YOLO
         image = image.convert("RGB")
 
         st.image(
@@ -198,18 +211,25 @@ if uploaded_file:
 
                 image_array = np.array(image)
 
-               results = model(image_array, conf=0.30)
+                # Stronger YOLO model +
+                # balanced confidence threshold
+                results = model(
+                    image_array,
+                    conf=0.30
+                )
 
                 result = results[0]
 
+            # Save results for Page 3
             st.session_state["image"] = image
             st.session_state["result"] = result
 
+            # Go to Results page
             st.switch_page(
                 "pages/2_✨_Results.py"
             )
 
-    except Exception:
+    except Exception as e:
 
         st.error(
             "Oops! Pixelle couldn't read this image. "
