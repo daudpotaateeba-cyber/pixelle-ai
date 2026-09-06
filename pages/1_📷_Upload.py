@@ -198,7 +198,7 @@ if uploaded_file:
 
                 image_array = np.array(image)
 
-                results = model(image_array, conf=0.20)
+               results = model(image_array, conf=0.30)
 
                 result = results[0]
 
