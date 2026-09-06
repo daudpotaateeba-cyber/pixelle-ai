@@ -1,4 +1,5 @@
 import streamlit as st
+from collections import Counter
 
 st.set_page_config(
     page_title="Pixelle | Results",
@@ -13,7 +14,6 @@ st.set_page_config(
 st.markdown("""
 <style>
 
-    /* Background */
     .stApp {
         background: linear-gradient(
             135deg,
@@ -22,14 +22,12 @@ st.markdown("""
         );
     }
 
-    /* Main content */
     .main .block-container {
-        max-width: 800px;
+        max-width: 850px;
         padding-top: 3.5rem;
         padding-bottom: 4rem;
     }
 
-    /* Sparkles */
     .sparkle {
         text-align: center;
         font-size: 1.4rem;
@@ -38,7 +36,6 @@ st.markdown("""
         margin-bottom: 0.5rem;
     }
 
-    /* Title */
     h1 {
         text-align: center;
         font-size: 2.8rem !important;
@@ -48,22 +45,35 @@ st.markdown("""
         margin-bottom: 0.5rem;
     }
 
-    /* Normal text */
     p {
-        text-align: center;
         color: #6f6872;
     }
 
-    /* Image */
-    [data-testid="stImage"] {
-        border-radius: 18px;
-        overflow: hidden;
-        margin-top: 1.5rem;
+    .summary-box {
+        background: rgba(255,255,255,0.75);
+        border: 1px solid #ddcfee;
+        border-radius: 22px;
+        padding: 1.3rem 1.5rem;
+        margin: 1.5rem 0;
+        box-shadow: 0 6px 20px rgba(120,90,160,0.10);
     }
 
-    /* -------------------------
-       PIXELLE BUTTON
-       ------------------------- */
+    .summary-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #8b6bb3;
+        margin-bottom: 0.6rem;
+    }
+
+    .object-line {
+        font-size: 1rem;
+        color: #6f6872;
+        margin: 0.25rem 0;
+    }
+
+    .stButton {
+        text-align: center;
+    }
 
     .stButton > button {
         background-color: #8b6bb3 !important;
@@ -73,11 +83,9 @@ st.markdown("""
         padding: 0.75rem 2.2rem !important;
         font-size: 1rem !important;
         font-weight: 650 !important;
-        box-shadow: 0 6px 20px rgba(120, 90, 160, 0.20) !important;
-        transition: 0.2s ease !important;
+        box-shadow: 0 6px 20px rgba(120,90,160,0.20) !important;
     }
 
-    /* Force ALL button text to white */
     .stButton > button *,
     .stButton > button p,
     .stButton > button span,
@@ -85,29 +93,10 @@ st.markdown("""
         color: #ffffff !important;
     }
 
-    /* Button hover */
     .stButton > button:hover {
         background-color: #76559e !important;
-        color: #ffffff !important;
         transform: translateY(-2px);
-        box-shadow: 0 9px 25px rgba(120, 90, 160, 0.25) !important;
     }
-
-    .stButton > button:hover *,
-    .stButton > button:hover p,
-    .stButton > button:hover span,
-    .stButton > button:hover div {
-        color: #ffffff !important;
-    }
-
-    /* Section headings */
-    h2, h3 {
-        color: #76559e !important;
-    }
-
-    /* -------------------------
-       LILAC INFO / WARNING BOX
-       ------------------------- */
 
     [data-testid="stAlert"] {
         background: #f3ebff !important;
@@ -116,11 +105,6 @@ st.markdown("""
         color: #76559e !important;
     }
 
-    [data-testid="stAlert"] p {
-        color: #76559e !important;
-    }
-
-    /* Footer */
     .footer {
         text-align: center;
         margin-top: 3rem;
@@ -133,7 +117,7 @@ st.markdown("""
 
 
 # -----------------------------
-# PAGE CONTENT
+# HEADER
 # -----------------------------
 
 st.markdown(
@@ -141,64 +125,110 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.title("Pixelle found... ♡")
-
-st.write("Here's what I detected in your image.")
+st.title("Pixelle found these ✦")
 
 
 # -----------------------------
-# RESULTS
+# CHECK RESULTS
 # -----------------------------
 
-if "result" in st.session_state:
+if "result" not in st.session_state:
+    st.warning("No detection results found yet. ♡")
+
+    if st.button("Upload an image"):
+        st.switch_page("pages/1_📷_Upload.py")
+
+else:
 
     result = st.session_state["result"]
 
+    # -----------------------------
+    # SHOW DETECTED IMAGE
+    # -----------------------------
+
+    plotted_image = result.plot()
+
     st.image(
-        result.plot(),
-        caption="Pixelle's detection ✦"
+        plotted_image,
+        caption="Pixelle's detections ✦"
     )
 
-    st.subheader("Detected objects ♡")
+    # -----------------------------
+    # COUNT OBJECTS
+    # -----------------------------
 
-    if len(result.boxes) == 0:
+    class_ids = result.boxes.cls.tolist()
 
-        st.info(
-            "Hmm... Pixelle couldn't recognize any objects "
-            "in this image. ♡"
+    detected_names = [
+        result.names[int(class_id)]
+        for class_id in class_ids
+    ]
+
+    object_counts = Counter(detected_names)
+
+    total_objects = len(detected_names)
+
+    # -----------------------------
+    # SUMMARY
+    # -----------------------------
+
+    if total_objects > 0:
+
+        st.markdown(
+            f"""
+            <div class="summary-box">
+                <div class="summary-title">
+                    Pixelle found {total_objects} object{"s" if total_objects != 1 else ""} ✦
+                </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        for object_name, count in object_counts.items():
+            st.markdown(
+                f"""
+                <div class="object-line">
+                    • {object_name.title()} × {count}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+        st.markdown(
+            "</div>",
+            unsafe_allow_html=True
         )
 
     else:
 
-        for box in result.boxes:
+        st.info(
+            "Pixelle couldn't confidently detect any objects in this image. ♡"
+        )
 
-            class_id = int(box.cls[0])
-            confidence = float(box.conf[0])
-            name = result.names[class_id]
+    # -----------------------------
+    # CONFIDENCE DETAILS
+    # -----------------------------
 
+    st.markdown("### Detection details")
+
+    if total_objects > 0:
+
+        confidences = result.boxes.conf.tolist()
+
+        for object_name, confidence in zip(
+            detected_names,
+            confidences
+        ):
             st.write(
-                f"**{name.title()}** — "
-                f"{confidence:.0%} confidence"
+                f"✦ {object_name.title()} — {confidence * 100:.1f}% confidence"
             )
 
-else:
+    # -----------------------------
+    # TRY AGAIN BUTTON
+    # -----------------------------
 
-    st.warning(
-        "Please upload an image first. ♡"
-    )
-
-
-# -----------------------------
-# ANALYZE ANOTHER IMAGE
-# -----------------------------
-
-st.divider()
-
-if st.button("← Analyze another image"):
-
-    st.switch_page(
-        "pages/1_📷_Upload.py"
-    )
+    if st.button("Analyze another image ✦"):
+        st.switch_page("pages/1_📷_Upload.py")
 
 
 # -----------------------------
