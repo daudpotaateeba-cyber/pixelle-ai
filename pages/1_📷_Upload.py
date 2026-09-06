@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # Load the stronger YOLO model
-model = YOLO("yolo11s.pt")
+model = YOLO("yolo11m.pt")
 
 
 # -----------------------------
